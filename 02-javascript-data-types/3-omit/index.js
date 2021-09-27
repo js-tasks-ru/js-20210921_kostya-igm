@@ -7,7 +7,7 @@
 
 export const omit = (obj, ...fields) => {
   const newObj = {};
-  for (let [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj)) {
     let isFieldExist = false;
 
     // "for" loop is used instead of forEach method,

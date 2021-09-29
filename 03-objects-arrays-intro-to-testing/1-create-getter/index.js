@@ -6,11 +6,11 @@
 export function createGetter(path) {
   const keysArray = path.split(".")
   return function (obj) {
-    return getKey(obj, keysArray);
+    return getValue(obj, keysArray);
   }
 }
 
-function getKey(obj, keysArray) {
+function getValue(obj, keysArray) {
   let valueFound = ""
 
   function deepIterate(obj) {

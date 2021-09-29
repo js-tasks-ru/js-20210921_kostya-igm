@@ -4,8 +4,8 @@
  * @returns {object | undefined} - returns new object or undefined if nothing did't pass
  */
 
+// Object -> to Array -> map (swap [key,value]) -> to Object
 export function invertObj(obj) {
-  // Object -> to Array -> map (swap [key,value]) -> to Object
   return (obj === undefined) ? undefined :
     Object.fromEntries(Object.entries(obj).map(([key, value]) => [value, key]))
 }

@@ -1,5 +1,6 @@
 export default class ColumnChart {
   chartHeight = 50;
+  subElements = {};
 
   constructor({
                 data = [],
@@ -36,13 +37,13 @@ export default class ColumnChart {
   render() {
     const element = document.createElement('div'); // (*)
     element.innerHTML = this.getTemplate();
+    this.element = element.firstElementChild;
 
     // add loading if there is no data
     if (this.data.length === 0) {
       element.querySelector(".column-chart").classList.add("column-chart_loading");
     }
-
-    this.element = element.firstElementChild;
+    this.subElements = this.getSubElements(this.element);
   }
 
   getColumnBody(data) {
@@ -56,8 +57,24 @@ export default class ColumnChart {
       .join('');
   }
 
+  getSubElements(element) {
+    const result = {};
+    const elements = element.querySelectorAll('[data-element]');
+
+    for (const subElement of elements) {
+      const name = subElement.dataset.element;
+      result[name] = subElement;
+    }
+
+    return result;
+  }
+
   getLink() {
     return this.link !== "" ? `<a class="column-chart__link" href=${this.link}>View all</a>` : "";
+  }
+
+  update(data) {
+    this.subElements.body.innerHTML = this.getColumnBody(data);
   }
 
   remove() {
@@ -66,6 +83,5 @@ export default class ColumnChart {
 
   destroy() {
     this.remove();
-    // NOTE: удаляем обработчики событий, если они есть
   }
 }

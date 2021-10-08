@@ -33,10 +33,14 @@ export default class NotificationMessage {
     const element = document.createElement('div');
     element.innerHTML = this.template;
     this.element = element.firstElementChild;
+    this.subElements = this.getSubElements(this.element);
   }
 
   show() {
     if (NotificationMessage.store) {
+      document.body.querySelector(".timer").remove();
+      document.body.querySelector(".notification").insertAdjacentHTML("afterbegin", `<div class="timer"></div>`);
+      clearTimeout(NotificationMessage.timerId)
       document.body.querySelector(".notification-body").textContent = `${this.message} ${Math.random()}`;
     } else {
       NotificationMessage.store = this.template;
@@ -44,12 +48,11 @@ export default class NotificationMessage {
       this.element = document.body.querySelector(".notification");
       this.element.classList.add(this.type);
 
-      setTimeout(() => {
+      NotificationMessage.timerId = setTimeout(() => {
         this.remove(this.element);
         NotificationMessage.store = null;
       }, this.duration);
     }
-    this.subElements = this.getSubElements(this.element);
 
   }
 

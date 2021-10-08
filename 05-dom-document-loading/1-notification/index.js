@@ -1,6 +1,7 @@
 export default class NotificationMessage {
   static store; // for Singleton pattern, to have only one instance of the class
-  static timerId;
+  timerId;
+  element;
 
   constructor(message = "", {duration = 0, type = ""} = {}) {
     this.message = message;
@@ -11,14 +12,14 @@ export default class NotificationMessage {
 
   get template() {
     return `
-     <div class="notification" style="--value:${this.duration}ms">
+     <div class="notification ${this.type}" style="--value:${this.duration}ms">
      <div class="timer"></div>
        <div class="inner-wrapper">
          <div class="notification-header">
                 Notification
           </div>
           <div class="notification-body">
-               ${this.message} ${Math.random()}
+               ${this.message}
           </div>
         </div>
       </div>
@@ -36,32 +37,28 @@ export default class NotificationMessage {
     this.subElements = this.getSubElements(this.element);
   }
 
-  show() {
-    if (NotificationMessage.store) {
-      document.body.querySelector(".timer").remove();
-      document.body.querySelector(".notification").insertAdjacentHTML("afterbegin", `<div class="timer"></div>`);
-      clearTimeout(NotificationMessage.timerId)
-      document.body.querySelector(".notification-body").textContent = `${this.message} ${Math.random()}`;
-    } else {
-      NotificationMessage.store = this.template;
-      document.body.insertAdjacentHTML("beforeend", this.template);
-      this.element = document.body.querySelector(".notification");
-      this.element.classList.add(this.type);
-
-      NotificationMessage.timerId = setTimeout(() => {
-        this.remove(this.element);
-        NotificationMessage.store = null;
-      }, this.duration);
+  show(target = document.body) {
+    if (this.store) {
+      this.store.remove();
     }
+    NotificationMessage.store = this;
+    target.append(this.element)
 
+    this.timerId = setTimeout(() => {
+      this.remove();
+      NotificationMessage.store = null;
+    }, this.duration);
   }
 
-  remove(element) {
-    element.remove();
+  remove() {
+    clearTimeout(this.timerId)
+    if (this.element) {
+      this.element.remove();
+    }
   }
 
   destroy() {
-    this.remove(this.element);
+    this.remove();
     this.element = null;
     this.subElements = {};
   }

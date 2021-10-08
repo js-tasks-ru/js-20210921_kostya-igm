@@ -41,6 +41,10 @@ export default class SortableTable {
     `;
   }
 
+  getHeader() {
+
+  }
+
   getBody(i, image) {
     return `
           <a href="/products/3d-ochki-epson-elpgs03" class="sortable-table__row">

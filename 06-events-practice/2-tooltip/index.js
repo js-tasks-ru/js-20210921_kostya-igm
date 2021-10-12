@@ -5,11 +5,24 @@ class Tooltip {
   tooltip;
   currentElement;
 
+  constructor() {
+    this.initialize();
+  }
+
+  get store() {
+    return Tooltip.store;
+  }
+
+  set store(obj) {
+    Tooltip.store = obj;
+  }
+
   onMouseOver = event => {
     if (this.currentElement !== event.target) {
       this.currentElement = event.target;
       if (event.target.dataset.tooltip !== undefined) {
-        this.render(event);
+        this.createTooltip(event);
+        this.render();
       }
     }
   }
@@ -25,20 +38,10 @@ class Tooltip {
     }
   }
 
-  constructor() {
-    this.initialize();
-  }
-
-  get store() {
-    return Tooltip.store;
-  }
-
-  set store(obj) {
-    Tooltip.store = obj;
-  }
-
   initialize() {
-    this.element = document.body;
+    const container = document.createElement("div")
+    container.innerHTML = `<div id='container'></div>`
+    this.element = container.firstElementChild;
     this.subElements = this.getSubElements(this.element);
 
     if (this.store) {
@@ -52,15 +55,21 @@ class Tooltip {
   setTooltipEventHandlers() {
     document.addEventListener('mouseover', this.onMouseOver);
     document.addEventListener('mouseout', this.onMouseOut);
-    document.addEventListener('mousemove', this.onMouseMove);
+    // mousemove event only on our text element
+    (document.body.firstElementChild !== null) ?
+      document.body.firstElementChild.addEventListener('mousemove', this.onMouseMove) :
+      document.addEventListener('mousemove', this.onMouseMove)
   }
 
-  render(event) {
+  createTooltip(event) {
     this.tooltip = document.createElement("div")
     this.tooltip.classList.add("tooltip");
     this.tooltip.innerText = event.target.dataset.tooltip;
     this.tooltip.style.top = (event.clientY + 10) + "px";
     this.tooltip.style.left = (event.clientX + 10) + "px";
+  }
+
+  render() {
     document.body.insertBefore(this.tooltip, document.body.firstChild);
   }
 

@@ -5,6 +5,26 @@ class Tooltip {
   tooltip;
   currentElement;
 
+  onMouseOver = event => {
+    if (this.currentElement !== event.target) {
+      this.currentElement = event.target;
+      if (event.target.dataset.tooltip !== undefined) {
+        this.render(event);
+      }
+    }
+  }
+
+  onMouseOut = () => {
+    this.remove();
+  }
+
+  onMouseMove = event => {
+    if (this.tooltip) {
+      this.tooltip.style.top = (event.clientY + 10) + "px";
+      this.tooltip.style.left = (event.clientX + 10) + "px";
+    }
+  }
+
   constructor() {
     this.initialize();
   }
@@ -30,25 +50,9 @@ class Tooltip {
   }
 
   setTooltipEventHandlers() {
-    document.addEventListener('mouseover', (event) => {
-      if (this.currentElement !== event.target) {
-        this.currentElement = event.target;
-        if (event.target.dataset.tooltip !== undefined) {
-          this.render(event);
-        }
-      }
-    });
-
-    document.addEventListener('mousemove', (event) => {
-      if (this.tooltip) {
-        this.tooltip.style.top = (event.clientY + 10) + "px";
-        this.tooltip.style.left = (event.clientX + 10) + "px";
-      }
-    });
-
-    document.addEventListener('mouseout', (event) => {
-      this.remove();
-    });
+    document.addEventListener('mouseover', this.onMouseOver);
+    document.addEventListener('mouseout', this.onMouseOut);
+    document.addEventListener('mousemove', this.onMouseMove);
   }
 
   render(event) {

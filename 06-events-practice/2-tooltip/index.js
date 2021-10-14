@@ -6,6 +6,11 @@ class Tooltip {
   currentElement;
 
   constructor() {
+    if (this.store) {
+      return this.store
+    }
+
+    this.store = this;
     this.initialize();
   }
 
@@ -23,18 +28,21 @@ class Tooltip {
       if (event.target.dataset.tooltip !== undefined) {
         this.createTooltip(event);
         this.render();
+        document.addEventListener('mousemove', this.onMouseMove)
       }
     }
   }
 
   onMouseOut = () => {
     this.remove();
+    document.removeEventListener('mousemove', this.onMouseMove)
   }
 
   onMouseMove = event => {
     if (this.tooltip) {
-      this.tooltip.style.top = (event.clientY + 10) + "px";
-      this.tooltip.style.left = (event.clientX + 10) + "px";
+      const shift = 10;
+      this.tooltip.style.top = (event.clientY + shift) + "px";
+      this.tooltip.style.left = (event.clientX + shift) + "px";
     }
   }
 
@@ -44,29 +52,21 @@ class Tooltip {
     this.element = container.firstElementChild;
     this.subElements = this.getSubElements(this.element);
 
-    if (this.store) {
-      this.store.remove();
-    }
-
-    this.store = this;
     this.setTooltipEventHandlers();
   }
 
   setTooltipEventHandlers() {
     document.addEventListener('mouseover', this.onMouseOver);
     document.addEventListener('mouseout', this.onMouseOut);
-    // mousemove event only on our text element
-    (document.body.firstElementChild !== null) ?
-      document.body.firstElementChild.addEventListener('mousemove', this.onMouseMove) :
-      document.addEventListener('mousemove', this.onMouseMove)
   }
 
   createTooltip(event) {
+    const shift = 10;
     this.tooltip = document.createElement("div")
     this.tooltip.classList.add("tooltip");
     this.tooltip.innerText = event.target.dataset.tooltip;
-    this.tooltip.style.top = (event.clientY + 10) + "px";
-    this.tooltip.style.left = (event.clientX + 10) + "px";
+    this.tooltip.style.top = (event.clientY + shift) + "px";
+    this.tooltip.style.left = (event.clientX + shift) + "px";
   }
 
   render() {
@@ -92,6 +92,10 @@ class Tooltip {
   }
 
   destroy() {
+    document.removeEventListener('mousemove', this.onMouseMove)
+    document.removeEventListener('mouseover', this.onMouseOver)
+    document.removeEventListener('mouseout', this.onMouseOut)
+
     this.remove();
     this.element = null;
     this.subElements = {};

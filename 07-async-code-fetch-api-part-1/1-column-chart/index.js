@@ -97,11 +97,12 @@ export default class ColumnChart {
     fetchJson(url)
       .then(response => {
         this.data = response;
-        this.subElements.body.innerHTML = this.getColumnBody(this.data);
         this.subElements.header.innerHTML = this.getHeaderValue();
+        this.subElements.body.innerHTML = this.getColumnBody(this.data);
         if (Object.keys(this.data).length > 0) {
           this.element.classList.remove("column-chart_loading");
         }
+        return this.data;
       })
       .catch(() => this.data = []);
     return this.data;

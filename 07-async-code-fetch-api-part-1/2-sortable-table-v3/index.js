@@ -7,8 +7,10 @@ export default class SortableTable {
   subElements = {};
   start = 0;
   end = 30;
+  step = 30;
   length = 0;
   dataCompleted = false;
+  loading = false;
 
   constructor(headerConfig, {
     url = "",
@@ -24,12 +26,23 @@ export default class SortableTable {
     this.render();
   }
 
-  sortOnClient(id, order) {
-
-  }
-
-  sortOnServer(id, order) {
-
+  infinityScroll = () => {
+    // if there is more data to be retrieved from backend
+    if (!this.dataCompleted) {
+      // lower border of the document
+      let windowRelativeBottom = document.documentElement.getBoundingClientRect().bottom;
+      // if user scrolled far enough (<100 px until the bottom), get and add more data
+      // and wait until data is loaded before retrieve the next portion of data not to spam API calls on scroll
+      if (windowRelativeBottom < document.documentElement.clientHeight + 100 && !this.loading) {
+        this.loading = true;
+        this.start += this.step;
+        this.end += this.step;
+        this.getData(this.start, this.end).then(() => {
+          this.update();
+          this.loading = false;
+        });
+      }
+    }
   }
 
   getTableHeader() {
@@ -109,26 +122,59 @@ export default class SortableTable {
     this.getData(this.start, this.end).then(() => {
       this.subElements.body.innerHTML = this.getTableBody();
       this.subElements.loading.style.display = "none";
-      document.addEventListener('scroll', this.infinityScroll.bind(this));
+      document.addEventListener('scroll', this.infinityScroll);
     });
   }
 
-  infinityScroll(event) {
-    // if there is more data to be retrieved from backend
-    if (!this.dataCompleted) {
-      // lower border of the document
-      let windowRelativeBottom = document.documentElement.getBoundingClientRect().bottom;
-      // if user scrolled far enough (<100 px until the bottom), get and add more data
-      if (windowRelativeBottom < document.documentElement.clientHeight + 100) {
-        this.start += 30;
-        this.end += 30;
-        this.getData(this.start, this.end).then(() => {
-          this.subElements.body.innerHTML = this.getTableBody();
-          this.subElements.loading.style.display = "none";
+  sortableHeader() {
+    this.sort(this.sorted.id, this.sorted.order); // sort by default
+    const headerColumn = this.element.querySelectorAll('.sortable-table__cell[data-id]');
+
+    headerColumn.forEach(header => {
+
+      const columnName = header.getAttribute("data-id");
+      const isSortable = header.getAttribute("data-sortable");
+
+      if (isSortable === "true") {
+        header.addEventListener("click", (event) => {
+          // const order = header.getAttribute("data-order");
+          // this.sorted.order = (order === "asc") ? "desc" : "asc";
+          // this.sort(columnName, this.sorted.order);
+          const column = event.target.closest('[data-sortable="true"]');
+          console.log(column)
+          const toggleOrder = order => {
+            const orders = {
+              asc: 'desc',
+              desc: 'asc'
+            };
+
+            return orders[order];
+          };
+
+          if (column) {
+            const {id, order} = column.dataset;
+            const newOrder = toggleOrder(order);
+
+            this.sorted = {
+              id,
+              order: newOrder
+            };
+
+            column.dataset.order = newOrder;
+            column.append(this.subElements.arrow);
+
+            if (this.isSortLocally) {
+              this.sortOnClient(id, newOrder);
+            } else {
+              this.sortOnServer(id, newOrder);
+            }
+          }
+
         });
       }
-    }
+    });
   }
+
 
   async getData(start, end) {
     const loading = this.element.querySelector(".sortable-table__loading-line")
@@ -159,15 +205,31 @@ export default class SortableTable {
         placeholder.style.display = "block";
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   }
 
   update() {
-    if (this.isSortLocally) {
-      this.sortOnClient(this.sorted.id, this.sorted.order);
+    this.subElements.body.innerHTML = this.getTableBody();
+    this.subElements.loading.style.display = "none";
+  }
+
+  sortOnClient(id, order) {
+    const sortedData = this.sortData(id, order);
+    this.subElements.body.innerHTML = this.getTableRows(sortedData);
+  }
+
+  async sortOnServer(id, order) {
+    const start = 1;
+    const end = start + this.step;
+    const data = await this.getData(id, order, start, end);
+
+    if (data.length) {
+      this.element.classList.remove('sortable-table_empty');
+      this.data = data;
+      this.subElements.body.innerHTML = this.getTableRows(data);
     } else {
-      this.sortOnServer(this.sorted.id, this.sorted.order);
+      this.element.classList.add('sortable-table_empty');
     }
   }
 
@@ -231,6 +293,7 @@ export default class SortableTable {
     this.remove();
     this.element = null;
     this.subElements = {};
+    document.removeEventListener('scroll', this.infinityScroll);
   }
 }
 

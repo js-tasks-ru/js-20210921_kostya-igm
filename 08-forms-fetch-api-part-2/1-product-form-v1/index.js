@@ -12,6 +12,9 @@ export default class ProductForm {
   categories;
   product = {};
   images;
+  productsUrl = new URL(PRODUCTS_PATHNAME, BACKEND_URL);
+  categoriesUrl = new URL(CATEGORIES_PATHNAME, BACKEND_URL);
+
 
   constructor(productId) {
     this.productId = productId;
@@ -109,9 +112,8 @@ ${escapeHtml(this.product[0].description)}</textarea>
 
   async loadProduct(id) {
     try {
-      const url = new URL(PRODUCTS_PATHNAME, BACKEND_URL);
-      url.searchParams.set("id", id);
-      return await fetchJson(url);
+      this.productsUrl.searchParams.set("id", id);
+      return await fetchJson(this.productsUrl);
     } catch (error) {
       console.error(error)
     }
@@ -119,10 +121,9 @@ ${escapeHtml(this.product[0].description)}</textarea>
 
   async getCategoriesData() {
     try {
-      const url = new URL(CATEGORIES_PATHNAME, BACKEND_URL);
-      url.searchParams.set("_sort", "weight")
-      url.searchParams.set("_refs", "subcategory");
-      return await fetchJson(url);
+      this.categoriesUrl.searchParams.set("_sort", "weight")
+      this.categoriesUrl.searchParams.set("_refs", "subcategory");
+      return await fetchJson(this.categoriesUrl);
     } catch (error) {
       console.error(error)
     }
@@ -160,10 +161,8 @@ ${escapeHtml(this.product[0].description)}</textarea>
   }
 
   async save() {
-    const url = new URL(PRODUCTS_PATHNAME, BACKEND_URL);
-
     try {
-      const result = await fetchJson(url, {
+      const result = await fetchJson(this.productsUrl, {
         method: this.productId ? 'PATCH' : 'PUT',
         headers: {
           'Content-Type': 'application/json'

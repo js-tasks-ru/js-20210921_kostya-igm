@@ -30,10 +30,12 @@ export default class SortableTable {
     // if there is more data to be retrieved from backend
     if (!this.dataCompleted) {
       // lower border of the document
-      let windowRelativeBottom = document.documentElement.getBoundingClientRect().bottom;
+      const windowRelativeBottom = document.documentElement.getBoundingClientRect().bottom;
+      const pixelsToBottom = 100;
       // if user scrolled far enough (<100 px until the bottom), get and add more data
       // and wait until data is loaded before retrieve the next portion of data not to spam API calls on scroll
-      if (windowRelativeBottom < document.documentElement.clientHeight + 100 && !this.loading) {
+      if (windowRelativeBottom < document.documentElement.clientHeight + pixelsToBottom
+          && !this.loading) {
         this.loading = true;
         this.start += this.step;
         this.end += this.step;

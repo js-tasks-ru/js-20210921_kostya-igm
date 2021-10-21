@@ -5,6 +5,7 @@ const BACKEND_URL = 'https://course-js.javascript.ru';
 export default class ColumnChart {
   chartHeight = 50;
   subElements = {};
+  ordersUrl;
 
   constructor({
                 url = '',
@@ -48,9 +49,10 @@ export default class ColumnChart {
 
     // add loading if there is no data
     if (this.data.length === 0) {
-      element.querySelector(".column-chart").classList.add("column-chart_loading");
+      this.element.classList.add("column-chart_loading");
     }
 
+    this.ordersUrl = new URL(this.url, BACKEND_URL);
     this.update(this.range.from, this.range.to);
   }
 
@@ -90,11 +92,10 @@ export default class ColumnChart {
   update(from, to) {
     this.range.from = new Date(from)
     this.range.to = new Date(to)
-    const url = new URL(this.url, BACKEND_URL);
-    url.searchParams.set("from", this.range.from);
-    url.searchParams.set("to", this.range.to)
+    this.ordersUrl.searchParams.set("from", this.range.from);
+    this.ordersUrl.searchParams.set("to", this.range.to)
 
-    fetchJson(url)
+    fetchJson(this.ordersUrl)
       .then(response => {
         this.data = response;
         this.subElements.header.innerHTML = this.getHeaderValue();

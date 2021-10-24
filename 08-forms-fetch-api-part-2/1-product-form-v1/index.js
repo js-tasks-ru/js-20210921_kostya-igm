@@ -15,7 +15,6 @@ export default class ProductForm {
   productsUrl = new URL(PRODUCTS_PATHNAME, BACKEND_URL);
   categoriesUrl = new URL(CATEGORIES_PATHNAME, BACKEND_URL);
 
-
   constructor(productId) {
     this.productId = productId;
   }
@@ -23,6 +22,35 @@ export default class ProductForm {
   onSubmit = event => {
     event.preventDefault();
     this.save();
+  }
+
+  uploadImage = () => {
+    const fileInput = document.getElementById("fileInput");
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+
+    fileInput.addEventListener("change", async () => {
+      const uploader = new ImageUploader();
+
+      try {
+        const [file] = fileInput.files;
+        const {imageListContainer} = this.subElements;
+
+        const result = await uploader.upload(file);
+        imageListContainer.append(this.getImage(result.data));
+
+        fileInput.remove();
+        alert("The image is uploaded");
+      } catch (error) {
+        console.log(error)
+      } finally {
+        console.log("ready")
+      }
+    });
+  }
+
+  upload() {
+
   }
 
   async render() {
@@ -67,7 +95,10 @@ ${escapeHtml(this.product[0].description)}</textarea>
                     ${this.images}
                 </ul>
               </div>
-            <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
+            <button type="button" name="uploadImage" class="button-primary-outline">
+                <span>Загрузить</span>
+                <input type="file" id="fileInput">
+            </button>
           </div>
 
           <div class="form-group form-group__half_left">
@@ -131,7 +162,12 @@ ${escapeHtml(this.product[0].description)}</textarea>
 
   getImagesTemplate(response) {
     return response[0].images.map(image => {
-      return `
+      return this.getImage(image)
+    }).join("")
+  }
+
+  getImage(image) {
+    return `
             <li class="products-edit__imagelist-item sortable-list__item" style="">
                 <input type="hidden" name="url" value="${image.url}">
                 <input type="hidden" name="source" value="${image.source}">
@@ -144,7 +180,6 @@ ${escapeHtml(this.product[0].description)}</textarea>
                     <img src="icon-trash.svg" data-delete-handle="" alt="delete">
                 </button>
             </li> `
-    }).join("")
   }
 
   getCategoriesTemplate() {
@@ -158,6 +193,9 @@ ${escapeHtml(this.product[0].description)}</textarea>
   initEventListeners() {
     const {productForm} = this.subElements
     productForm.addEventListener("submit", this.onSubmit);
+
+    const uploadImageBtn = this.subElements.productForm.querySelector('button[name="uploadImage"]');
+    uploadImageBtn.addEventListener("click", this.uploadImage)
   }
 
   async save() {
@@ -206,5 +244,26 @@ ${escapeHtml(this.product[0].description)}</textarea>
     this.remove();
     this.element = null;
     this.subElements = null;
+  }
+}
+
+export class ImageUploader {
+  async upload(file) {
+    const formData = new FormData();
+    formData.append("image", file)
+
+    try {
+      const response = await fetch("https://api.imgur.com/3/image", {
+        method: "POST",
+        headers: {
+          Authorization: `Client-ID ${IMGUR_CLIENT_ID}`
+        },
+        body: formData,
+        referrer: ""
+      })
+      return await response.json();
+    } catch (error) {
+      return Promise.reject(error)
+    }
   }
 }
